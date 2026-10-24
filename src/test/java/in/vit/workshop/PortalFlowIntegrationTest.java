@@ -36,13 +36,16 @@ class PortalFlowIntegrationTest {
     @Test void attendeeCanBookFindAndCancelSeat() throws Exception {
         mvc.perform(post("/book").param("workshopId", workshop.getId().toString())
                         .param("name", "  Asha Rao ").param("email", " ASHA@example.com "))
-                .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/"));
+                .andExpect(status().is3xxRedirection()).andExpect(redirectedUrlPattern("/?success=*"));
+        mvc.perform(get("/").param("success", "Your seat is confirmed!"))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("Your seat is confirmed!")))
+                .andExpect(content().string(containsString("Test workshop")));
         mvc.perform(get("/my-bookings").param("email", "asha@example.com"))
                 .andExpect(status().isOk()).andExpect(content().string(containsString("Test workshop")))
                 .andExpect(content().string(containsString("CONFIRMED")));
         var booking = bookings.findAll().getFirst();
         mvc.perform(post("/cancel").param("bookingId", booking.getId().toString()).param("email", "asha@example.com"))
-                .andExpect(status().is3xxRedirection());
+                .andExpect(status().is3xxRedirection()).andExpect(redirectedUrlPattern("/my-bookings?success=*&email=*"));
         mvc.perform(get("/my-bookings").param("email", "asha@example.com"))
                 .andExpect(status().isOk()).andExpect(content().string(containsString("CANCELLED")));
         org.junit.jupiter.api.Assertions.assertEquals(0, workshops.findById(workshop.getId()).orElseThrow().getBookedSeats());
@@ -56,3 +59,4 @@ class PortalFlowIntegrationTest {
         org.junit.jupiter.api.Assertions.assertEquals(1, workshops.findById(workshop.getId()).orElseThrow().getBookedSeats());
     }
 }
+
