@@ -13,8 +13,12 @@ public class PortalController {
     public PortalController(BookingService service) { this.service = service; }
 
     @GetMapping("/")
-    public String home(Model model) {
+    public String home(@RequestParam(required = false) String success,
+                       @RequestParam(required = false) String error,
+                       Model model) {
         model.addAttribute("workshops", service.workshops());
+        if (success != null && !success.isBlank()) model.addAttribute("success", success);
+        if (error != null && !error.isBlank()) model.addAttribute("error", error);
         return "index";
     }
 
@@ -25,17 +29,22 @@ public class PortalController {
                        RedirectAttributes redirect) {
         try {
             service.book(workshopId, name, email);
-            redirect.addFlashAttribute("success", "Your seat is confirmed! Save the email you used to track or cancel your booking.");
+            redirect.addAttribute("success", "Your seat is confirmed! Save the email you used to track or cancel your booking.");
         } catch (RuntimeException e) {
-            redirect.addFlashAttribute("error", e.getMessage());
+            redirect.addAttribute("error", e.getMessage());
         }
         return "redirect:/";
     }
 
     @GetMapping("/my-bookings")
-    public String myBookings(@RequestParam(required = false) String email, Model model) {
+    public String myBookings(@RequestParam(required = false) String email,
+                             @RequestParam(required = false) String success,
+                             @RequestParam(required = false) String error,
+                             Model model) {
         model.addAttribute("email", email == null ? "" : email);
         model.addAttribute("bookings", (email == null || email.isBlank()) ? java.util.List.of() : service.bookingsFor(email));
+        if (success != null && !success.isBlank()) model.addAttribute("success", success);
+        if (error != null && !error.isBlank()) model.addAttribute("error", error);
         return "bookings";
     }
 
@@ -43,10 +52,12 @@ public class PortalController {
     public String cancel(@RequestParam Long bookingId, @RequestParam String email, RedirectAttributes redirect) {
         try {
             service.cancel(bookingId, email);
-            redirect.addFlashAttribute("success", "Booking cancelled.");
+            redirect.addAttribute("success", "Booking cancelled.");
         } catch (RuntimeException e) {
-            redirect.addFlashAttribute("error", e.getMessage());
+            redirect.addAttribute("error", e.getMessage());
         }
-        return "redirect:/my-bookings?email=" + java.net.URLEncoder.encode(email, java.nio.charset.StandardCharsets.UTF_8);
+        redirect.addAttribute("email", email);
+        return "redirect:/my-bookings";
     }
 }
+
