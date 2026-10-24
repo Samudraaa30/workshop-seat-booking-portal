@@ -1,0 +1,41 @@
+# Render Blueprint for a free demo deployment.
+# Free Render Postgres expires 30 days after creation; do not store data here
+# that must be retained. Upgrade PostgreSQL before using this for production.
+services:
+  - type: web
+    name: workshop-seat-booking-portal
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: PGHOST
+        fromDatabase:
+          name: workshop-seat-booking-db
+          property: host
+      - key: PGPORT
+        fromDatabase:
+          name: workshop-seat-booking-db
+          property: port
+      - key: PGDATABASE
+        fromDatabase:
+          name: workshop-seat-booking-db
+          property: database
+      - key: PGUSER
+        fromDatabase:
+          name: workshop-seat-booking-db
+          property: user
+      - key: PGPASSWORD
+        fromDatabase:
+          name: workshop-seat-booking-db
+          property: password
+
+databases:
+  - name: workshop-seat-booking-db
+    plan: free
+    databaseName: workshop_booking
+    user: workshop_user
+    ipAllowList: []
+
