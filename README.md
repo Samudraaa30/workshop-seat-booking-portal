@@ -120,24 +120,19 @@ The SSH account needs sudo access. Open TCP port 8080 for a direct demo, or plac
 
 ## Render deployment
 
-The source is published at [Samudraaa30/workshop-seat-booking-portal](https://github.com/Samudraaa30/workshop-seat-booking-portal). Render deploys this Java application through the checked-in Dockerfile; the application honors Render's `PORT` variable and exposes `/health` as its health check. The repository includes a Render Blueprint at `render.yaml` that configures a free Docker web service and prompts for Neon PostgreSQL credentials without storing them in Git.
+The source is published at [Samudraaa30/workshop-seat-booking-portal](https://github.com/Samudraaa30/workshop-seat-booking-portal). The live demo is [workshop-seat-booking-portal.onrender.com](https://workshop-seat-booking-portal.onrender.com/). Render built the checked-in Dockerfile, started Java 21/Spring Boot, and the public `/health` endpoint returned `{"application":"Workshop Seat Booking Portal","status":"UP"}`. Set `SPRING_PROFILES_ACTIVE`, `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, and `SPRING_DATASOURCE_PASSWORD` in the Render service environment; secrets stay in Render and are not stored in this repository.
 
-To deploy, create a Neon Free project and copy its pooled PostgreSQL connection details. In Render, connect the GitHub repository and create a Blueprint from its root `render.yaml`. For `SPRING_DATASOURCE_URL`, use Neon's JDBC URL format: `jdbc:postgresql://<pooled-host>/<database>?sslmode=require`; enter the username and password into the two separately prompted secret fields. Apply the Blueprint using the free web plan. Render will build the Docker image and assign an `onrender.com` URL. Verify `https://<service>.onrender.com/health` returns `{"status":"UP"}`, then test booking, lookup, and cancellation on the public site.
+**Free demo limits:** The current web service and PostgreSQL database use Render's free plans, so the web service can sleep when idle. Render states that free PostgreSQL databases expire after 30 days; this demo database is scheduled for deletion on **November 23, 2026** unless upgraded. Do not use it for important or long-lived data. The included `render.yaml` is an alternative Blueprint for a free Render web service connected to a separate Neon Free PostgreSQL database; Neon has its own storage and compute quotas. Follow the Blueprint comments and secret prompts when choosing that option. Review [Render free-tier limitations](https://render.com/docs/free), [Neon Free plan limits](https://github.com/neondatabase/website/blob/main/content/faqs/free-plan-limits-and-quotas.md), and [Neon's JDBC connection guidance](https://neon.com/docs/connect/connect-from-any-app). No paid plan is required to view this temporary demo.
 
-**Free-tier limits:** Render free web services can sleep when idle. Neon Free currently includes 1 GB of database storage and 100 compute-unit hours per project per month; its compute scales to zero after inactivity, and hitting a free quota suspends compute until the quota resets or the project is upgraded. Unlike Render's free Postgres, Neon Free data is not deleted after 30 days. These are demo-scale quotas, not an uptime guarantee. Review [Render free-tier limitations](https://render.com/docs/free), [Neon Free plan limits](https://github.com/neondatabase/website/blob/main/content/faqs/free-plan-limits-and-quotas.md), and [Neon's JDBC connection guidance](https://neon.com/docs/connect/connect-from-any-app). This Blueprint provisions only the free Render web service; the Neon database is a separate free project.
+## Validation status
 
-The Blueprint is ready, but it has not been applied: Render email verification is still pending and no Neon database credentials are available in this task. No service has been provisioned and there is no verified public application URL yet. After signing in to Render, create the Neon project, apply `render.yaml`, and provide the service URL to continue verification. For a Linux VM deployment instead, the Jenkins/Ansible path supports a Docker host; see the Ansible section below.
+- `mvn clean verify` passed on Java 21.0.12.1 and Maven 3.10.0: **7 tests passed; 0 failures, errors, or skips**. The packaged JAR was produced.
+- Render's Docker build completed and the service was marked live. The public `/health` endpoint returned HTTP 200 with status `UP`.
+- The booking, lookup, and cancellation flow is covered by `PortalFlowIntegrationTest` and was rechecked on the live UI after the redirect fix. Both synthetic test bookings were cancelled and the workshop seats restored.
+- The Jenkins declarative pipeline is checked in, but a Jenkins server run and registry publishing were not performed in this environment.
+- The Ansible playbook was reviewed and its YAML parsed. `ansible-playbook --syntax-check` and a remote host deployment were not run from this Windows control node; use Linux, macOS, or WSL for the documented Ansible commands.
+- The first live smoke test exposed session-dependent feedback redirects. Fix and regression test are published on `main` and Render deployment `51071a1` is live.
 
-Runtime verification is recorded below. Save hosting, Jenkins, registry, and Ansible screenshots under `docs/evidence/` after those external runs. Do not mark public deployment, registry push, Jenkins execution, or Ansible host execution complete until the corresponding run has been performed and recorded.
-
-## Validation status for this source snapshot
-
-- Verified with Java 21.0.12.1 and Maven 3.9.16: `mvn -B clean verify` passed with 7 tests and 0 failures/errors.
-- Started the packaged JAR with the local profile; `/health` returned HTTP 200 and `UP`. The HTTP booking, lookup, and cancellation flow completed successfully.
-- `mvn clean verify` was run with Java 21.0.12.1 and Maven 3.10.0: 7 tests passed, 0 failures/errors/skips, and the packaged JAR was produced. The Render Blueprint prompts for the JDBC URL and database credentials as secret environment variables.
-- Docker and Jenkins were not installed in the authoring environment, so image build/run and pipeline execution remain unverified here.
-- The Ansible playbook and Liquibase changelog parse as YAML/XML. Ansible was installed in a scratch virtual environment, but its CLI could not run on this native Windows control node; use Linux, macOS, or WSL for `ansible-playbook --syntax-check` and host execution.
-- The supplied ZIP had no Git history; the completed source is published in the GitHub repository linked above. No public application deployment was performed because Render account access is not connected.
 
 
 
