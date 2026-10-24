@@ -120,15 +120,13 @@ The SSH account needs sudo access. Open TCP port 8080 for a direct demo, or plac
 
 ## Render deployment
 
-The source is published at [Samudraaa30/workshop-seat-booking-portal](https://github.com/Samudraaa30/workshop-seat-booking-portal). Render can deploy this Java application through the checked-in Dockerfile; Java is not a native Render runtime, so Docker is the supported route. The application honors Render's `PORT` variable and exposes `/health` for the Render health check.
+The source is published at [Samudraaa30/workshop-seat-booking-portal](https://github.com/Samudraaa30/workshop-seat-booking-portal). Render deploys this Java application through the checked-in Dockerfile; the application honors Render's `PORT` variable and exposes `/health` as its health check. The repository includes a Render Blueprint at `render.yaml` that configures a free Docker web service and a free PostgreSQL database, with database settings wired through Render's secret references.
 
-1. In Render, create a Web Service from the GitHub repository above and choose Docker. Use the repository root as the Docker context and set the health check path to `/health`.
-2. Create or select a managed Render PostgreSQL database in the same region. Set `SPRING_PROFILES_ACTIVE=prod`, `SPRING_DATASOURCE_URL` to the database's internal connection string with the JDBC scheme (`jdbc:postgresql://...`), and `SPRING_DATASOURCE_USERNAME` / `SPRING_DATASOURCE_PASSWORD` using the values from the database dashboard. Keep credentials in Render's environment-variable settings; never put them in Git or `render.yaml`.
-3. Deploy and verify the assigned `https://<service>.onrender.com/health` URL returns `{"status":"UP"}`. Then try the booking, lookup, and cancellation journeys on the public site.
+To deploy, connect the GitHub repository in Render and create a Blueprint from its root `render.yaml`. Review the listed resources and choose the free plans, then apply the Blueprint. Render will build the Docker image and assign an `onrender.com` URL. Verify `https://<service>.onrender.com/health` returns `{"status":"UP"}`, then test booking, lookup, and cancellation on the public site.
 
-Render's free web service can sleep when idle. More importantly, free Render Postgres instances expire 30 days after creation and have a 14-day upgrade window before data deletion, so use a paid persistent Postgres plan for real production bookings. Review the current [Render free-tier limitations](https://render.com/docs/free), [Postgres plans](https://render.com/docs/postgresql), and account pricing before provisioning. No paid resource has been created or approved in this task.
+**Free-tier data warning:** Render free web services can sleep when idle. Free Render Postgres instances expire 30 days after creation; after expiry there is a 14-day upgrade window before data is deleted. This Blueprint is for a demo, not durable production bookings. Upgrade Postgres to a paid persistent plan before keeping real bookings. Review the current [Render free-tier limitations](https://render.com/docs/free) and [Postgres plans](https://render.com/docs/postgresql). The Blueprint selects free plans and does not create a paid resource.
 
-Render is selected as the target, but its account connection is not available in this task and the dashboard session is signed out. Therefore no service/database has been provisioned and no public application URL can yet be claimed. Connect the Render app integration in Codex, or sign in yourself and provide the service/database details, then the deployment can be completed. For a Linux VM deployment instead, the Jenkins/Ansible path supports a Docker host; see the Ansible section below.
+The Blueprint is ready, but it has not been applied: Render account access is not connected in this task and the dashboard session is signed out. No service/database has been provisioned and there is no verified public application URL yet. Connect the Render app integration in Codex or sign in to Render and apply `render.yaml`; then share the service URL or reconnect the account to continue verification. For a Linux VM deployment instead, the Jenkins/Ansible path supports a Docker host; see the Ansible section below.
 
 Runtime verification is recorded below. Save hosting, Jenkins, registry, and Ansible screenshots under `docs/evidence/` after those external runs. Do not mark public deployment, registry push, Jenkins execution, or Ansible host execution complete until the corresponding run has been performed and recorded.
 
@@ -136,9 +134,10 @@ Runtime verification is recorded below. Save hosting, Jenkins, registry, and Ans
 
 - Verified with Java 21.0.12.1 and Maven 3.9.16: `mvn -B clean verify` passed with 7 tests and 0 failures/errors.
 - Started the packaged JAR with the local profile; `/health` returned HTTP 200 and `UP`. The HTTP booking, lookup, and cancellation flow completed successfully.
-- `mvn clean verify` was run with Java 21.0.12.1 and Maven 3.10.0: 7 tests passed, 0 failures/errors/skips, and the packaged JAR was produced.
+- `mvn clean verify` was run with Java 21.0.12.1 and Maven 3.10.0: 7 tests passed, 0 failures/errors/skips, and the packaged JAR was produced. The Render production datasource can use either the standard JDBC environment variables or the separate `PGHOST`/`PGPORT`/`PGDATABASE`/`PGUSER`/`PGPASSWORD` variables referenced by the Blueprint.
 - Docker and Jenkins were not installed in the authoring environment, so image build/run and pipeline execution remain unverified here.
 - The Ansible playbook and Liquibase changelog parse as YAML/XML. Ansible was installed in a scratch virtual environment, but its CLI could not run on this native Windows control node; use Linux, macOS, or WSL for `ansible-playbook --syntax-check` and host execution.
 - The supplied ZIP had no Git history; the completed source is published in the GitHub repository linked above. No public application deployment was performed because Render account access is not connected.
+
 
 
