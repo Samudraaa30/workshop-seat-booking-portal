@@ -1,6 +1,5 @@
-# Render Blueprint for a free demo deployment.
-# Free Render Postgres expires 30 days after creation; do not store data here
-# that must be retained. Upgrade PostgreSQL before using this for production.
+# Free Render web service paired with an external Neon Free PostgreSQL database.
+# The database URL and credentials are prompted by Render and are not stored here.
 services:
   - type: web
     name: workshop-seat-booking-portal
@@ -11,31 +10,11 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
-      - key: PGHOST
-        fromDatabase:
-          name: workshop-seat-booking-db
-          property: host
-      - key: PGPORT
-        fromDatabase:
-          name: workshop-seat-booking-db
-          property: port
-      - key: PGDATABASE
-        fromDatabase:
-          name: workshop-seat-booking-db
-          property: database
-      - key: PGUSER
-        fromDatabase:
-          name: workshop-seat-booking-db
-          property: user
-      - key: PGPASSWORD
-        fromDatabase:
-          name: workshop-seat-booking-db
-          property: password
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
 
-databases:
-  - name: workshop-seat-booking-db
-    plan: free
-    databaseName: workshop_booking
-    user: workshop_user
-    ipAllowList: []
 
