@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+    <changeSet id="1-create-workshops-and-bookings" author="workshop-portal">
+        <createTable tableName="workshop">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="title" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="description" type="VARCHAR(1000)"><constraints nullable="false"/></column>
+            <column name="starts_at" type="TIMESTAMP"/>
+            <column name="capacity" type="INT"><constraints nullable="false"/></column>
+            <column name="booked_seats" type="INT"><constraints nullable="false"/></column>
+        </createTable>
+        <createTable tableName="seat_booking">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="attendee_name" type="VARCHAR(255)"/>
+            <column name="attendee_email" type="VARCHAR(255)"/>
+            <column name="workshop_id" type="BIGINT"><constraints nullable="false" foreignKeyName="fk_booking_workshop" referencedTableName="workshop" referencedColumnNames="id"/></column>
+            <column name="status" type="VARCHAR(255)"/>
+            <column name="created_at" type="TIMESTAMP"/>
+        </createTable>
+        <createIndex tableName="seat_booking" indexName="idx_seat_booking_email"><column name="attendee_email"/></createIndex>
+        <createIndex tableName="seat_booking" indexName="idx_seat_booking_workshop"><column name="workshop_id"/></createIndex>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,107 @@
+---
+- name: Deploy Workshop Seat Booking Portal container
+  hosts: all
+  become: true
+  vars:
+    app_dir: /opt/workshop-seat-booking
+    image_name: "{{ portal_image | default(lookup('env', 'PORTAL_IMAGE')) }}"
+  tasks:
+    - name: Require image and production database configuration
+      ansible.builtin.assert:
+        that:
+          - image_name | length > 0
+          - lookup('env', 'SPRING_DATASOURCE_URL') is match('^jdbc:postgresql://')
+          - lookup('env', 'SPRING_DATASOURCE_USERNAME') | length > 0
+          - lookup('env', 'SPRING_DATASOURCE_PASSWORD') | length > 0
+          - lookup('env', 'REGISTRY_USER') | length > 0
+          - lookup('env', 'REGISTRY_TOKEN') | length > 0
+        fail_msg: "Set the image and Jenkins credentials for a PostgreSQL database and Docker Hub."
+      no_log: true
+
+    - name: Install Docker on Debian/Ubuntu hosts
+      ansible.builtin.apt:
+        name:
+          - docker.io
+          - python3-docker
+        state: present
+        update_cache: true
+      when: ansible_os_family == "Debian"
+
+    - name: Ensure Docker is enabled and running
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Create application directory
+      ansible.builtin.file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0700"
+
+    - name: Log in to Docker Hub on the deployment host
+      community.docker.docker_login:
+        username: "{{ lookup('env', 'REGISTRY_USER') }}"
+        password: "{{ lookup('env', 'REGISTRY_TOKEN') }}"
+      no_log: true
+
+    - name: Run application container
+      community.docker.docker_container:
+        name: workshop-seat-booking
+        image: "{{ image_name }}"
+        state: started
+        restart_policy: unless-stopped
+        recreate: true
+        pull: true
+        published_ports:
+          - "8080:8080"
+        env:
+          SPRING_PROFILES_ACTIVE: prod
+          SPRING_DATASOURCE_URL: "{{ lookup('env', 'SPRING_DATASOURCE_URL') }}"
+          SPRING_DATASOURCE_USERNAME: "{{ lookup('env', 'SPRING_DATASOURCE_USERNAME') }}"
+          SPRING_DATASOURCE_PASSWORD: "{{ lookup('env', 'SPRING_DATASOURCE_PASSWORD') }}"
+        labels:
+          app: workshop-seat-booking
+        log_driver: json-file
+        log_options:
+          max-size: 10m
+          max-file: "3"
+      no_log: true
+
+    - name: Remove Docker Hub login from the deployment host
+      community.docker.docker_login:
+        state: absent
+      no_log: true
+
+    - name: Wait for the application port
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: 8080
+        delay: 5
+        timeout: 120
+
+    - name: Verify application health endpoint
+      ansible.builtin.uri:
+        url: http://127.0.0.1:8080/health
+        method: GET
+        status_code: 200
+        return_content: true
+      register: portal_health
+
+    - name: Confirm health response reports UP
+      ansible.builtin.assert:
+        that:
+          - portal_health.json.status == "UP"
+
+    - name: Confirm running container state
+      community.docker.docker_container_info:
+        name: workshop-seat-booking
+      register: deployed_container
+
+    - name: Fail if the container is not running
+      ansible.builtin.assert:
+        that:
+          - deployed_container.exists
+          - deployed_container.container.State.Running

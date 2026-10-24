@@ -131,4 +131,3 @@ Runtime verification is recorded below. Save hosting, Jenkins, registry, and Ans
 - Docker and Jenkins were not installed in the authoring environment, so image build/run and pipeline execution remain unverified here.
 - The Ansible playbook and Liquibase changelog parse as YAML/XML. Ansible was installed in a scratch virtual environment, but its CLI could not run on this native Windows control node; use Linux, macOS, or WSL for `ansible-playbook --syntax-check` and host execution.
 - The provided ZIP did not include a `.git` directory, GitHub remote, or repository credentials. No GitHub push or public deployment was performed.
-

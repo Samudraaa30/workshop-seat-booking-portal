@@ -1,0 +1,3 @@
+[workshop_servers]
+# Replace with your server host and SSH user before running:
+# portal.example.com ansible_user=ubuntu
