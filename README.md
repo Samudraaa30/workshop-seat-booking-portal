@@ -118,9 +118,17 @@ ansible-playbook -i ansible/inventory.ini ansible/deploy.yml --private-key ~/.ss
 
 The SSH account needs sudo access. Open TCP port 8080 for a direct demo, or place a TLS reverse proxy in front of the container for public use. The playbook does not create a PostgreSQL service, DNS name, TLS certificate, or cloud account.
 
-## Public deployment and evidence
+## Render deployment
 
-The source is published at [Samudraaa30/workshop-seat-booking-portal](https://github.com/Samudraaa30/workshop-seat-booking-portal). No connected hosting account, deployment host, or production database credentials are available in this task yet, so a public application URL cannot be claimed. A suitable low-ops route is a container host such as Railway or Render paired with managed PostgreSQL; the Jenkins/Ansible path supports a Linux VM with Docker. Provision PostgreSQL, store the variables above in the host's secret store, and deploy the image before sharing a URL. Paid services require the owner's approval.
+The source is published at [Samudraaa30/workshop-seat-booking-portal](https://github.com/Samudraaa30/workshop-seat-booking-portal). Render can deploy this Java application through the checked-in Dockerfile; Java is not a native Render runtime, so Docker is the supported route. The application honors Render's `PORT` variable and exposes `/health` for the Render health check.
+
+1. In Render, create a Web Service from the GitHub repository above and choose Docker. Use the repository root as the Docker context and set the health check path to `/health`.
+2. Create or select a managed Render PostgreSQL database in the same region. Set `SPRING_PROFILES_ACTIVE=prod`, `SPRING_DATASOURCE_URL` to the database's internal connection string with the JDBC scheme (`jdbc:postgresql://...`), and `SPRING_DATASOURCE_USERNAME` / `SPRING_DATASOURCE_PASSWORD` using the values from the database dashboard. Keep credentials in Render's environment-variable settings; never put them in Git or `render.yaml`.
+3. Deploy and verify the assigned `https://<service>.onrender.com/health` URL returns `{"status":"UP"}`. Then try the booking, lookup, and cancellation journeys on the public site.
+
+Render's free web service can sleep when idle. More importantly, free Render Postgres instances expire 30 days after creation and have a 14-day upgrade window before data deletion, so use a paid persistent Postgres plan for real production bookings. Review the current [Render free-tier limitations](https://render.com/docs/free), [Postgres plans](https://render.com/docs/postgresql), and account pricing before provisioning. No paid resource has been created or approved in this task.
+
+Render is selected as the target, but its account connection is not available in this task and the dashboard session is signed out. Therefore no service/database has been provisioned and no public application URL can yet be claimed. Connect the Render app integration in Codex, or sign in yourself and provide the service/database details, then the deployment can be completed. For a Linux VM deployment instead, the Jenkins/Ansible path supports a Docker host; see the Ansible section below.
 
 Runtime verification is recorded below. Save hosting, Jenkins, registry, and Ansible screenshots under `docs/evidence/` after those external runs. Do not mark public deployment, registry push, Jenkins execution, or Ansible host execution complete until the corresponding run has been performed and recorded.
 
@@ -128,7 +136,9 @@ Runtime verification is recorded below. Save hosting, Jenkins, registry, and Ans
 
 - Verified with Java 21.0.12.1 and Maven 3.9.16: `mvn -B clean verify` passed with 7 tests and 0 failures/errors.
 - Started the packaged JAR with the local profile; `/health` returned HTTP 200 and `UP`. The HTTP booking, lookup, and cancellation flow completed successfully.
+- `mvn clean verify` was run with Java 21.0.12.1 and Maven 3.10.0: 7 tests passed, 0 failures/errors/skips, and the packaged JAR was produced.
 - Docker and Jenkins were not installed in the authoring environment, so image build/run and pipeline execution remain unverified here.
 - The Ansible playbook and Liquibase changelog parse as YAML/XML. Ansible was installed in a scratch virtual environment, but its CLI could not run on this native Windows control node; use Linux, macOS, or WSL for `ansible-playbook --syntax-check` and host execution.
-- The supplied ZIP had no Git history; the completed source is published in the GitHub repository linked above. No public application deployment was performed.
+- The supplied ZIP had no Git history; the completed source is published in the GitHub repository linked above. No public application deployment was performed because Render account access is not connected.
+
 
