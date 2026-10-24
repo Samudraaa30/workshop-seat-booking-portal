@@ -120,7 +120,7 @@ The SSH account needs sudo access. Open TCP port 8080 for a direct demo, or plac
 
 ## Public deployment and evidence
 
-No GitHub remote, hosting account, deployment host, or database credentials were included in the supplied ZIP. Therefore no public URL or live deployment can be claimed yet. A suitable low-ops route is a container host such as Railway or Render paired with managed PostgreSQL; the Jenkins/Ansible path supports a Linux VM with Docker. Select/create the hosting account, provision PostgreSQL, store the variables above, and deploy the image before publishing a URL. Paid services and account access require the owner's choice and authorization.
+The source is published at [Samudraaa30/workshop-seat-booking-portal](https://github.com/Samudraaa30/workshop-seat-booking-portal). No connected hosting account, deployment host, or production database credentials are available in this task yet, so a public application URL cannot be claimed. A suitable low-ops route is a container host such as Railway or Render paired with managed PostgreSQL; the Jenkins/Ansible path supports a Linux VM with Docker. Provision PostgreSQL, store the variables above in the host's secret store, and deploy the image before sharing a URL. Paid services require the owner's approval.
 
 Runtime verification is recorded below. Save hosting, Jenkins, registry, and Ansible screenshots under `docs/evidence/` after those external runs. Do not mark public deployment, registry push, Jenkins execution, or Ansible host execution complete until the corresponding run has been performed and recorded.
 
@@ -130,4 +130,5 @@ Runtime verification is recorded below. Save hosting, Jenkins, registry, and Ans
 - Started the packaged JAR with the local profile; `/health` returned HTTP 200 and `UP`. The HTTP booking, lookup, and cancellation flow completed successfully.
 - Docker and Jenkins were not installed in the authoring environment, so image build/run and pipeline execution remain unverified here.
 - The Ansible playbook and Liquibase changelog parse as YAML/XML. Ansible was installed in a scratch virtual environment, but its CLI could not run on this native Windows control node; use Linux, macOS, or WSL for `ansible-playbook --syntax-check` and host execution.
-- The provided ZIP did not include a `.git` directory, GitHub remote, or repository credentials. No GitHub push or public deployment was performed.
+- The supplied ZIP had no Git history; the completed source is published in the GitHub repository linked above. No public application deployment was performed.
+
