@@ -4,14 +4,26 @@ A responsive Java 21 / Spring Boot site for workshop discovery, seat booking, bo
 
 ## Features and design
 
-- Workshop listings show start time, capacity, and live remaining-seat counts.
+- Workshop listings show start time, capacity, and live remaining-seat counts. Server-sent events push seat availability to every open workshop page after a booking or cancellation commits, without requiring a refresh.
 - Booking validates name and email, serializes capacity updates with a database row lock, and rejects full or missing workshops.
 - Attendees can find and cancel bookings by email. Cancellation is idempotent and restores one seat.
 - Thymeleaf templates and responsive CSS serve the web UI. `/health` and `/actuator/health` provide health endpoints.
+- `GET /api/workshops` returns the current public availability snapshot; `GET /api/workshops/events` streams initial and changed snapshots over Server-Sent Events. EventSource reconnects automatically and the server sends keep-alive comments during idle periods.
 - H2 is used locally; PostgreSQL is used in production. Liquibase owns the schema; Hibernate validates it rather than mutating production schemas at startup.
 - Docker uses a Java 21 multi-stage build and a non-root runtime user. Jenkins runs Maven verification and optionally publishes/deploys. Ansible configures a Docker host and runs the image.
 
 The booking lookup flow uses email as an identifier, not authentication. It is suitable for a coursework/demo MVP. Before storing real personal data, add authentication/authorization, CSRF protection, rate limiting, privacy controls, and a security review.
+
+### Live availability flow
+
+```text
+Browser A ── EventSource (/api/workshops/events) ──┐
+                                                   ├── Spring Boot broadcasts the latest seat snapshot
+Browser B ── EventSource (/api/workshops/events) ──┘               ▲
+       └── booking/cancellation POST → database transaction commits ┘
+```
+
+Each browser receives the current snapshot when it connects. A successful booking or cancellation publishes an application event; Spring delivers it only after the database transaction commits, and all connected browsers receive the new seat count. The page updates the progress bar and disables or re-enables the booking button immediately. If a browser disconnects, EventSource reconnects and receives a fresh snapshot. This is real-time availability across browsers connected to this app instance; the static workshop catalog itself has no admin/create-workshop workflow.
 
 ## Requirements
 

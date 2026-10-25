@@ -6,14 +6,16 @@ import in.vit.workshop.repo.BookingRepository;
 import in.vit.workshop.repo.WorkshopRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
 import java.util.List;
 
 @Service
 public class BookingService {
     private final WorkshopRepository workshops;
     private final BookingRepository bookings;
-    public BookingService(WorkshopRepository workshops, BookingRepository bookings) {
-        this.workshops = workshops; this.bookings = bookings;
+    private final ApplicationEventPublisher events;
+    public BookingService(WorkshopRepository workshops, BookingRepository bookings, ApplicationEventPublisher events) {
+        this.workshops = workshops; this.bookings = bookings; this.events = events;
     }
     public List<Workshop> workshops() { return workshops.findAll(); }
     public List<Booking> bookingsFor(String email) {
@@ -32,7 +34,9 @@ public class BookingService {
         if (workshop.getAvailableSeats() < 1) throw new IllegalStateException("Sorry, this workshop is full.");
         workshop.setBookedSeats(workshop.getBookedSeats() + 1);
         workshops.save(workshop);
-        return bookings.save(new Booking(name.trim(), email.trim().toLowerCase(), workshop));
+        Booking booking = bookings.save(new Booking(name.trim(), email.trim().toLowerCase(), workshop));
+        publishAvailabilityChanged();
+        return booking;
     }
     @Transactional
     public void cancel(Long bookingId, String email) {
@@ -48,5 +52,10 @@ public class BookingService {
         workshop.setBookedSeats(Math.max(0, workshop.getBookedSeats() - 1));
         workshops.save(workshop);
         bookings.save(booking);
+        publishAvailabilityChanged();
+    }
+
+    private void publishAvailabilityChanged() {
+        events.publishEvent(new WorkshopAvailabilityChangedEvent());
     }
 }

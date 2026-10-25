@@ -4,6 +4,8 @@ import in.vit.workshop.model.Workshop;
 import in.vit.workshop.repo.BookingRepository;
 import in.vit.workshop.repo.WorkshopRepository;
 import in.vit.workshop.service.BookingService;
+import in.vit.workshop.service.WorkshopAvailabilityChangedEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -13,11 +15,12 @@ import static org.mockito.Mockito.*;
 class BookingServiceTest {
     private final WorkshopRepository workshops = mock(WorkshopRepository.class);
     private final BookingRepository bookings = mock(BookingRepository.class);
-    private final BookingService service = new BookingService(workshops, bookings);
+    private final ApplicationEventPublisher events = mock(ApplicationEventPublisher.class);
+    private final BookingService service = new BookingService(workshops, bookings, events);
 
     @Test void rejectsInvalidContactDetailsBeforeWriting() {
         assertThrows(IllegalArgumentException.class, () -> service.book(1L, " ", "bad-email"));
-        verifyNoInteractions(workshops, bookings);
+        verifyNoInteractions(workshops, bookings, events);
     }
 
     @Test void rejectsUnknownWorkshop() {
@@ -33,5 +36,17 @@ class BookingServiceTest {
         when(workshops.findByIdForUpdate(1L)).thenReturn(Optional.of(workshop));
         assertThrows(IllegalStateException.class, () -> service.book(1L, "Asha", "asha@example.com"));
         verify(bookings, never()).save(any());
+        verifyNoInteractions(events);
+    }
+
+    @Test void publishesAvailabilityChangeAfterASeatIsBooked() {
+        Workshop workshop = new Workshop("Open", "Description", LocalDateTime.now(), 2);
+        when(workshops.findByIdForUpdate(1L)).thenReturn(Optional.of(workshop));
+        when(bookings.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.book(1L, "Asha", "asha@example.com");
+
+        assertEquals(1, workshop.getBookedSeats());
+        verify(events).publishEvent(any(WorkshopAvailabilityChangedEvent.class));
     }
 }

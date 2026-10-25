@@ -20,9 +20,9 @@
 7. Docker/Ansible evidence
 
 ## Demo script
-1. Open public portal on phone and laptop.
-2. Book a workshop and show remaining seats update.
-3. Look up booking by email and cancel.
+1. Open public portal in two browser windows or devices.
+2. Book a workshop in one; show the other page's remaining seats and button update live without refresh.
+3. Look up booking by email and cancel; show availability return live in the open workshop page.
 4. Open `/health`.
 5. Show Git history, feature branch/PR and tag.
 6. Run Jenkins and show Maven build/test report/JAR artifact.

@@ -33,6 +33,14 @@ class PortalFlowIntegrationTest {
         mvc.perform(get("/health")).andExpect(status().isOk()).andExpect(jsonPath("$.status").value("UP"));
     }
 
+    @Test void availabilitySnapshotExposesCurrentSeatCountsForLiveClients() throws Exception {
+        mvc.perform(get("/api/workshops"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].title").value("Test workshop"))
+                .andExpect(jsonPath("$[0].availableSeats").value(1))
+                .andExpect(jsonPath("$[0].bookedSeats").value(0));
+    }
+
     @Test void attendeeCanBookFindAndCancelSeat() throws Exception {
         mvc.perform(post("/book").param("workshopId", workshop.getId().toString())
                         .param("name", "  Asha Rao ").param("email", " ASHA@example.com "))
