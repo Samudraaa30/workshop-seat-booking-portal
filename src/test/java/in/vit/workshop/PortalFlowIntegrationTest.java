@@ -3,6 +3,9 @@ package in.vit.workshop;
 import in.vit.workshop.model.Workshop;
 import in.vit.workshop.repo.BookingRepository;
 import in.vit.workshop.repo.WorkshopRepository;
+import in.vit.workshop.service.BookingService;
+import in.vit.workshop.service.VitEventsCatalogService;
+import in.vit.workshop.service.VitEventsFeedParser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +14,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -20,6 +25,8 @@ class PortalFlowIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired WorkshopRepository workshops;
     @Autowired BookingRepository bookings;
+    @Autowired BookingService service;
+    @Autowired VitEventsCatalogService vitCatalog;
     private Workshop workshop;
 
     @BeforeEach void setUp() {
@@ -65,6 +72,25 @@ class PortalFlowIntegrationTest {
                 .andExpect(status().is3xxRedirection());
         org.junit.jupiter.api.Assertions.assertEquals(1, bookings.count());
         org.junit.jupiter.api.Assertions.assertEquals(1, workshops.findById(workshop.getId()).orElseThrow().getBookedSeats());
+    }
+
+    @Test void importedListingsCanBeBookedAndRefreshDoesNotResetPortalSeats() {
+        var event = new VitEventsFeedParser.ImportedEvent("VIT workshop", "14th December 2026",
+                java.time.LocalDate.of(2026, 12, 14), "https://vit.edu.in/workshop.pdf");
+        vitCatalog.synchronize(java.util.List.of(event), 5);
+        Workshop imported = workshops.findByExternalSourceKey(event.sourceKey()).orElseThrow();
+        assertTrue(imported.isImported());
+        service.book(imported.getId(), "Test Attendee", "test.attendee@example.com");
+
+        var updatedEvent = new VitEventsFeedParser.ImportedEvent("Updated VIT workshop", "15th December 2026",
+                java.time.LocalDate.of(2026, 12, 15), event.sourceUrl());
+        vitCatalog.synchronize(java.util.List.of(updatedEvent), 99);
+
+        Workshop refreshed = workshops.findById(imported.getId()).orElseThrow();
+        assertEquals("Updated VIT workshop", refreshed.getTitle());
+        assertEquals(5, refreshed.getCapacity());
+        assertEquals(1, refreshed.getBookedSeats());
+        assertEquals(4, refreshed.getAvailableSeats());
     }
 }
 

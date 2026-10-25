@@ -2,12 +2,21 @@
   const status = document.getElementById('live-status');
   const dot = document.getElementById('live-dot');
   const sessionCount = document.getElementById('session-count');
+  let refreshingForNewListing = false;
   if (!status || !window.EventSource) return;
 
   function render(workshops) {
     workshops.forEach((workshop) => {
       const card = document.querySelector(`[data-workshop-id="${workshop.id}"]`);
-      if (!card) return;
+      if (!card) {
+        // The server may have imported a newly announced event after this page rendered.
+        // Reload once so Thymeleaf can add the complete card and booking form.
+        if (!refreshingForNewListing) {
+          refreshingForNewListing = true;
+          window.location.reload();
+        }
+        return;
+      }
 
       const seatPill = document.getElementById(`seat-pill-${workshop.id}`);
       const bookedCount = document.getElementById(`booked-count-${workshop.id}`);
