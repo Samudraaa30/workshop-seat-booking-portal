@@ -138,7 +138,8 @@ The source is published at [Samudraaa30/workshop-seat-booking-portal](https://gi
 
 ## Validation status
 
-- `mvn clean verify` passed on Java 21.0.12.1 and Maven 3.10.0: **7 tests passed; 0 failures, errors, or skips**. The packaged JAR was produced.
+- `mvn clean verify` passed on Java 21.0.12.1 and Maven 3.10.0: **9 tests passed; 0 failures, errors, or skips**. The packaged JAR was produced.
+- The SSE stream was exercised with a connected local HTTP client: a booking changed availability from 30 to 29, and cancellation restored it from 29 to 30; both updates arrived on the existing stream without reconnecting.
 - Render's Docker build completed and the service was marked live. The public `/health` endpoint returned HTTP 200 with status `UP`.
 - The booking, lookup, and cancellation flow is covered by `PortalFlowIntegrationTest` and was rechecked on the live UI after the redirect fix. Both synthetic test bookings were cancelled and the workshop seats restored.
 - The Jenkins declarative pipeline is checked in, but a Jenkins server run and registry publishing were not performed in this environment.
