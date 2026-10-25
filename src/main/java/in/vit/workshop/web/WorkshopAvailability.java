@@ -10,10 +10,14 @@ public record WorkshopAvailability(
         LocalDateTime startsAt,
         int capacity,
         int bookedSeats,
-        int availableSeats) {
+        int availableSeats,
+        boolean imported,
+        String sourceUrl,
+        String sourceDateText) {
 
     public static WorkshopAvailability from(Workshop workshop) {
         return new WorkshopAvailability(workshop.getId(), workshop.getTitle(), workshop.getDescription(),
-                workshop.getStartsAt(), workshop.getCapacity(), workshop.getBookedSeats(), workshop.getAvailableSeats());
+                workshop.getStartsAt(), workshop.getCapacity(), workshop.getBookedSeats(), workshop.getAvailableSeats(),
+                workshop.isImported(), workshop.getSourceUrl(), workshop.getSourceDateText());
     }
 }

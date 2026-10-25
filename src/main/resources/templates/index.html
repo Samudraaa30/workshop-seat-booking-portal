@@ -24,13 +24,15 @@
 <div><div class="eyebrow">THE LINEUP</div><h2 class="section-title mb-0">Find your next workshop</h2></div>
 <div class="listing-status"><span class="live-dot" id="live-dot"></span><span class="text-secondary" id="live-status" role="status" aria-live="polite">Connecting to live availability…</span><span class="text-secondary" aria-hidden="true">·</span><span class="text-secondary" id="session-count" th:text="${workshops.size()} + ' sessions available'"></span></div>
 </div>
+<p class="small text-secondary mb-4">Official VIT events are refreshed from the <a href="https://vit.edu.in/news-update/" target="_blank" rel="noopener">VIT Events &amp; Updates</a> page. Seat limits and booking counts below are managed only by this portal; they do not reflect VIT or AICTE registration.</p>
 <div class="row g-4">
 <div class="col-12 col-md-6 col-lg-4" th:each="w,stat : ${workshops}" th:id="'workshop-card-' + ${w.id}" th:data-workshop-id="${w.id}">
 <article class="workshop-card h-100">
 <div class="card-top"><span class="session-no" th:text="'SESSION 0' + (${stat.index}+1)"></span><span class="seat-pill" th:id="'seat-pill-' + ${w.id}" th:text="${w.availableSeats} + ' seats left'"></span></div>
 <div class="card-body p-4">
 <h3 th:text="${w.title}">Workshop title</h3><p class="description" th:text="${w.description}">Description</p>
-<div class="date-line">◷ <span th:text="${#temporals.format(w.startsAt, 'EEE, dd MMM · HH:mm')}"></span></div>
+<div class="date-line">◷ <span th:if="${w.imported}" th:text="${w.sourceDateText} + ' · time TBA'"></span><span th:unless="${w.imported}" th:text="${#temporals.format(w.startsAt, 'EEE, dd MMM · HH:mm')}"></span></div>
+<div th:if="${w.imported}" class="small mb-3"><a th:href="${w.sourceUrl}" target="_blank" rel="noopener">View official event details ↗</a><span class="text-secondary"> · Portal bookings only</span></div>
 <div class="capacity"><div class="capacity-fill" th:id="'capacity-fill-' + ${w.id}" th:style="'width:' + (${w.bookedSeats * 100.0 / w.capacity}) + '%'"></div></div>
 <div class="small text-secondary mb-3" th:id="'booked-count-' + ${w.id}" th:text="${w.bookedSeats} + ' of ' + ${w.capacity} + ' seats booked'"></div>
 <form action="/book" method="post" class="booking-form">

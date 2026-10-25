@@ -9,6 +9,8 @@ A responsive Java 21 / Spring Boot site for workshop discovery, seat booking, bo
 - Attendees can find and cancel bookings by email. Cancellation is idempotent and restores one seat.
 - Thymeleaf templates and responsive CSS serve the web UI. `/health` and `/actuator/health` provide health endpoints.
 - `GET /api/workshops` returns the current public availability snapshot; `GET /api/workshops/events` streams initial and changed snapshots over Server-Sent Events. EventSource reconnects automatically and the server sends keep-alive comments during idle periods.
+- In the `prod` profile, the app imports future listings from VIT's public [Events & Updates page](https://vit.edu.in/news-update/) through its WordPress REST page endpoint at startup and hourly while the service is running. It uses each announcement's title, date text, and official link; missing/invalid dates and past events are skipped. Local/test profiles keep the sample catalog and do not call the external feed. On Render's free instance, scheduled refreshes pause while the service sleeps and resume after it wakes.
+- VIT does not publish seat capacity or booking counts through this feed. Imported events use a portal-managed capacity (`VIT_IMPORT_DEFAULT_CAPACITY`, default `30`), and their date is shown with “time TBA” when no time is published. Bookings/counts in this app are separate from VIT/AICTE registration; attendees may need to register with the official event organizer as well. The portal links to the announcement for that purpose.
 - H2 is used locally; PostgreSQL is used in production. Liquibase owns the schema; Hibernate validates it rather than mutating production schemas at startup.
 - Docker uses a Java 21 multi-stage build and a non-root runtime user. Jenkins runs Maven verification and optionally publishes/deploys. Ansible configures a Docker host and runs the image.
 
@@ -71,8 +73,13 @@ Set the following environment variables in the host or secret manager. Never com
 | `SPRING_DATASOURCE_USERNAME` | PostgreSQL application user |
 | `SPRING_DATASOURCE_PASSWORD` | PostgreSQL application password |
 | `PORT` | Optional; defaults to `8080` |
+| `VIT_IMPORT_ENABLED` | Enable the VIT announcement importer in production (default `true`) |
+| `VIT_IMPORT_DEFAULT_CAPACITY` | Portal-only capacity assigned to newly imported events (default `30`; choose an organizer-approved limit) |
+| `VIT_IMPORT_INTERVAL_MS` | Time between successful/failed refresh attempts while running (default `3600000`, one hour) |
 
 Create an empty PostgreSQL database and user, then start the app. Liquibase applies the versioned schema at `src/main/resources/db/changelog/db.changelog-master.xml`; Hibernate checks the resulting schema. Use a managed PostgreSQL service with encrypted connections and backups for public deployments.
+
+The importer starts about 10 seconds after application startup. If VIT is temporarily unavailable, the existing workshop catalog stays available and the importer retries on its next scheduled run. No external attendee/seat data is inferred or imported.
 
 ## Docker
 

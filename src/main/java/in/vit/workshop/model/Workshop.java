@@ -14,6 +14,12 @@ public class Workshop {
     private LocalDateTime startsAt;
     @Min(1) private int capacity;
     private int bookedSeats;
+    @Column(name = "external_source_key", unique = true, length = 512)
+    private String externalSourceKey;
+    @Column(name = "source_url", length = 1000)
+    private String sourceUrl;
+    @Column(name = "source_date_text", length = 255)
+    private String sourceDateText;
 
     public Workshop() {}
     public Workshop(String title, String description, LocalDateTime startsAt, int capacity) {
@@ -26,6 +32,10 @@ public class Workshop {
     public LocalDateTime getStartsAt() { return startsAt; }
     public int getCapacity() { return capacity; }
     public int getBookedSeats() { return bookedSeats; }
+    public String getExternalSourceKey() { return externalSourceKey; }
+    public String getSourceUrl() { return sourceUrl; }
+    public String getSourceDateText() { return sourceDateText; }
+    public boolean isImported() { return externalSourceKey != null; }
     public int getAvailableSeats() { return Math.max(0, capacity - bookedSeats); }
     public void setId(Long id) { this.id = id; }
     public void setTitle(String title) { this.title = title; }
@@ -33,4 +43,7 @@ public class Workshop {
     public void setStartsAt(LocalDateTime startsAt) { this.startsAt = startsAt; }
     public void setCapacity(int capacity) { this.capacity = capacity; }
     public void setBookedSeats(int bookedSeats) { this.bookedSeats = bookedSeats; }
+    public void setExternalSourceKey(String externalSourceKey) { this.externalSourceKey = externalSourceKey; }
+    public void setSourceUrl(String sourceUrl) { this.sourceUrl = sourceUrl; }
+    public void setSourceDateText(String sourceDateText) { this.sourceDateText = sourceDateText; }
 }

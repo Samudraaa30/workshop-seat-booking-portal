@@ -22,4 +22,12 @@
         <createIndex tableName="seat_booking" indexName="idx_seat_booking_email"><column name="attendee_email"/></createIndex>
         <createIndex tableName="seat_booking" indexName="idx_seat_booking_workshop"><column name="workshop_id"/></createIndex>
     </changeSet>
+    <changeSet id="2-add-external-event-metadata" author="workshop-portal">
+        <addColumn tableName="workshop">
+            <column name="external_source_key" type="VARCHAR(512)"/>
+            <column name="source_url" type="VARCHAR(1000)"/>
+            <column name="source_date_text" type="VARCHAR(255)"/>
+        </addColumn>
+        <addUniqueConstraint tableName="workshop" columnNames="external_source_key" constraintName="uq_workshop_external_source_key"/>
+    </changeSet>
 </databaseChangeLog>
