@@ -16,5 +16,9 @@ services:
         sync: false
       - key: SPRING_DATASOURCE_PASSWORD
         sync: false
+      - key: PORTAL_ADMIN_USERNAME
+        sync: false
+      - key: PORTAL_ADMIN_PASSWORD
+        sync: false
 
 

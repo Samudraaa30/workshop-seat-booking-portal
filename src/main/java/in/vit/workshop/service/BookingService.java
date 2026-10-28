@@ -14,8 +14,11 @@ public class BookingService {
     private final WorkshopRepository workshops;
     private final BookingRepository bookings;
     private final ApplicationEventPublisher events;
-    public BookingService(WorkshopRepository workshops, BookingRepository bookings, ApplicationEventPublisher events) {
+    private final NotificationService notifications;
+    public BookingService(WorkshopRepository workshops, BookingRepository bookings,
+                          ApplicationEventPublisher events, NotificationService notifications) {
         this.workshops = workshops; this.bookings = bookings; this.events = events;
+        this.notifications = notifications;
     }
     public List<Workshop> workshops() { return workshops.findAll(); }
     public List<Booking> bookingsFor(String email) {
@@ -35,6 +38,7 @@ public class BookingService {
         workshop.setBookedSeats(workshop.getBookedSeats() + 1);
         workshops.save(workshop);
         Booking booking = bookings.save(new Booking(name.trim(), email.trim().toLowerCase(), workshop));
+        notifications.bookingConfirmed(booking);
         publishAvailabilityChanged();
         return booking;
     }
@@ -46,12 +50,24 @@ public class BookingService {
             .orElseThrow(() -> new IllegalArgumentException("Booking not found."));
         if (!booking.getAttendeeEmail().equalsIgnoreCase(email.trim()))
             throw new IllegalArgumentException("Enter the email used for this booking.");
+        cancelConfirmedBooking(booking, false);
+    }
+
+    @Transactional
+    public void cancelByAdmin(Long bookingId) {
+        Booking booking = bookings.findByIdForUpdate(bookingId)
+                .orElseThrow(() -> new IllegalArgumentException("Booking not found."));
+        cancelConfirmedBooking(booking, true);
+    }
+
+    private void cancelConfirmedBooking(Booking booking, boolean byAdmin) {
         if ("CANCELLED".equals(booking.getStatus())) return;
         booking.setStatus("CANCELLED");
         Workshop workshop = booking.getWorkshop();
         workshop.setBookedSeats(Math.max(0, workshop.getBookedSeats() - 1));
         workshops.save(workshop);
         bookings.save(booking);
+        notifications.bookingCancelled(booking, byAdmin);
         publishAvailabilityChanged();
     }
 

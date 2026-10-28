@@ -9,6 +9,8 @@ import java.util.Optional;
 import java.util.List;
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByAttendeeEmailIgnoreCaseOrderByCreatedAtDesc(String email);
+    List<Booking> findAllByOrderByCreatedAtDesc();
+    long countByStatus(String status);
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select b from Booking b where b.id = :id")
     Optional<Booking> findByIdForUpdate(@Param("id") Long id);

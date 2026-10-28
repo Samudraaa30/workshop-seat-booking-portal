@@ -5,6 +5,7 @@ import in.vit.workshop.repo.BookingRepository;
 import in.vit.workshop.repo.WorkshopRepository;
 import in.vit.workshop.service.BookingService;
 import in.vit.workshop.service.WorkshopAvailabilityChangedEvent;
+import in.vit.workshop.service.NotificationService;
 import org.springframework.context.ApplicationEventPublisher;
 import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
@@ -16,11 +17,12 @@ class BookingServiceTest {
     private final WorkshopRepository workshops = mock(WorkshopRepository.class);
     private final BookingRepository bookings = mock(BookingRepository.class);
     private final ApplicationEventPublisher events = mock(ApplicationEventPublisher.class);
-    private final BookingService service = new BookingService(workshops, bookings, events);
+    private final NotificationService notifications = mock(NotificationService.class);
+    private final BookingService service = new BookingService(workshops, bookings, events, notifications);
 
     @Test void rejectsInvalidContactDetailsBeforeWriting() {
         assertThrows(IllegalArgumentException.class, () -> service.book(1L, " ", "bad-email"));
-        verifyNoInteractions(workshops, bookings, events);
+        verifyNoInteractions(workshops, bookings, events, notifications);
     }
 
     @Test void rejectsUnknownWorkshop() {
@@ -48,5 +50,6 @@ class BookingServiceTest {
 
         assertEquals(1, workshop.getBookedSeats());
         verify(events).publishEvent(any(WorkshopAvailabilityChangedEvent.class));
+        verify(notifications).bookingConfirmed(any());
     }
 }

@@ -9,7 +9,7 @@
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark nav-glass"><div class="container">
 <a class="navbar-brand fw-bold" href="/">✦ Workshoply</a>
-<div class="ms-auto"><a class="btn btn-outline-light btn-sm" href="/my-bookings">My bookings</a></div>
+<div class="ms-auto d-flex gap-2"><a class="btn btn-outline-light btn-sm" href="/my-bookings">Attendee: My bookings</a><a class="btn btn-outline-light btn-sm" href="/admin/login">Admin sign in</a></div>
 </div></nav>
 <header class="hero"><div class="container py-5">
 <div class="eyebrow">LEARN SOMETHING. BUILD SOMETHING.</div>
@@ -35,7 +35,7 @@
 <div th:if="${w.imported}" class="small mb-3"><a th:href="${w.sourceUrl}" target="_blank" rel="noopener">View official event details ↗</a><span class="text-secondary"> · Portal bookings only</span></div>
 <div class="capacity"><div class="capacity-fill" th:id="'capacity-fill-' + ${w.id}" th:style="'width:' + (${w.bookedSeats * 100.0 / w.capacity}) + '%'"></div></div>
 <div class="small text-secondary mb-3" th:id="'booked-count-' + ${w.id}" th:text="${w.bookedSeats} + ' of ' + ${w.capacity} + ' seats booked'"></div>
-<form action="/book" method="post" class="booking-form">
+<form th:action="@{/book}" method="post" class="booking-form">
 <input type="hidden" name="workshopId" th:value="${w.id}">
 <label class="form-label">Your name</label><input class="form-control mb-2" name="name" placeholder="Full name" required maxlength="100">
 <label class="form-label">Email address</label><input class="form-control mb-3" type="email" name="email" placeholder="you@example.com" required maxlength="160">

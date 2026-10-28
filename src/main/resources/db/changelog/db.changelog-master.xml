@@ -30,4 +30,17 @@
         </addColumn>
         <addUniqueConstraint tableName="workshop" columnNames="external_source_key" constraintName="uq_workshop_external_source_key"/>
     </changeSet>
+    <changeSet id="3-create-portal-notifications" author="workshop-portal">
+        <createTable tableName="portal_notification">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="recipient_email" type="VARCHAR(160)"><constraints nullable="false"/></column>
+            <column name="kind" type="VARCHAR(40)"><constraints nullable="false"/></column>
+            <column name="title" type="VARCHAR(120)"><constraints nullable="false"/></column>
+            <column name="message" type="VARCHAR(500)"><constraints nullable="false"/></column>
+            <column name="created_at" type="TIMESTAMP"><constraints nullable="false"/></column>
+        </createTable>
+        <createIndex tableName="portal_notification" indexName="idx_portal_notification_recipient">
+            <column name="recipient_email"/><column name="created_at"/>
+        </createIndex>
+    </changeSet>
 </databaseChangeLog>

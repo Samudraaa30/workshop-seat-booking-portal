@@ -1,6 +1,7 @@
 package in.vit.workshop.web;
 
 import in.vit.workshop.service.BookingService;
+import in.vit.workshop.service.NotificationService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -10,7 +11,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 public class PortalController {
     private final BookingService service;
-    public PortalController(BookingService service) { this.service = service; }
+    private final NotificationService notifications;
+    public PortalController(BookingService service, NotificationService notifications) {
+        this.service = service;
+        this.notifications = notifications;
+    }
 
     @GetMapping("/")
     public String home(@RequestParam(required = false) String success,
@@ -43,6 +48,7 @@ public class PortalController {
                              Model model) {
         model.addAttribute("email", email == null ? "" : email);
         model.addAttribute("bookings", (email == null || email.isBlank()) ? java.util.List.of() : service.bookingsFor(email));
+        model.addAttribute("notifications", notifications.forAttendee(email));
         if (success != null && !success.isBlank()) model.addAttribute("success", success);
         if (error != null && !error.isBlank()) model.addAttribute("error", error);
         return "bookings";
